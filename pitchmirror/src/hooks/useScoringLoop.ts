@@ -26,7 +26,7 @@ export function useScoringLoop(): UseScoringLoopResult {
     tips: [],
     fps: 0,
     quality: null,
-    isMock: true, // Always true since we're using mock for now
+    isMock: true, // Always true - scoring data is always from fixtures (camera is real though)
     paused: false,
     showOverlay: true,
   });
@@ -98,13 +98,8 @@ export function useScoringLoop(): UseScoringLoopResult {
     };
   }, [isReady, framePack, state.paused]);
 
-  // Update isMock status based on Vision layer
-  useEffect(() => {
-    setState(prev => ({
-      ...prev,
-      isMock: !isReady || !!error,
-    }));
-  }, [isReady, error]);
+  // Note: isMock is always true since we use fixture data for scoring
+  // Camera feed is real, but pose/face landmarks and all scores come from mock data
 
   return {
     state,

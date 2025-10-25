@@ -89,10 +89,10 @@ export default function PitchMirror() {
               <VideoCanvas videoRef={videoRef} />
               <OverlayCanvas frame={state.frame} show={state.showOverlay} />
               
-              {/* Demo mode badge */}
-              {state.isMock && phase === 'RUNNING' && (
-                <div className="absolute top-4 left-4 bg-yellow-500/20 border border-yellow-500/50 text-yellow-300 px-3 py-1 rounded-full text-xs font-medium backdrop-blur-sm">
-                  Demo Mode (No Camera)
+              {/* Demo mode badge - always shown since scoring is mock */}
+              {phase === 'RUNNING' && (
+                <div className="absolute top-4 left-4 bg-blue-500/20 border border-blue-500/50 text-blue-300 px-3 py-1 rounded-full text-xs font-medium backdrop-blur-sm">
+                  Mock Scoring Mode
                 </div>
               )}
 
