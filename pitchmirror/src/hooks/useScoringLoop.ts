@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { UseScoringLoopResult, ScoringState } from '../lib/types';
 import { useMediaPipe } from '../lib/mockVision';
-import { evaluate } from '../lib/mockLogic';
+import { evaluate } from '@scoring-engine/index';
 
 /**
  * Main state management hook for PitchMirror

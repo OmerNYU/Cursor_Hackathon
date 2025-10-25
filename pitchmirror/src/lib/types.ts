@@ -1,3 +1,6 @@
+// ===== Import TipRule from scoring engine =====
+import type { TipRule } from '@scoring-engine/types';
+
 // ===== Shared low-level types from Vision =====
 // These are the structures Vision gives us. We NEVER compute them in UI. We only read them.
 // FramePack updates ~10 times per second.
@@ -7,6 +10,9 @@ export interface Vec2 {
   y: number;
   visibility?: number; // optional confidence per landmark
 }
+
+// Re-export TipRule for convenience
+export type { TipRule };
 
 export interface PoseFrame {
   shoulders: { L: Vec2; R: Vec2 };
@@ -61,7 +67,7 @@ export interface EvaluateResult {
     C: number; // Composure/Pacing [0..1]
   };
   overall: number;   // 0..100
-  tips: string[];    // up to 2 coaching strings
+  tips: TipRule[];   // up to 2 tip rules with messages
 }
 
 // ===== Vision hook from teammate 1 that UI consumes =====
@@ -90,7 +96,7 @@ export interface ScoringState {
   features: EvaluateResult["features"] | null;
   subscores: EvaluateResult["subscores"] | null;
   overall: number | null;   // 0..100
-  tips: string[];
+  tips: TipRule[];
   fps: number;
   quality: FramePack["quality"] | null;
   isMock: boolean;          // true if we are replaying fixtures instead of real camera

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
+import type { TipRule } from '../lib/types';
 
 export interface TipsPanelProps {
-  tips: string[];  // length 0..2
+  tips: TipRule[];  // length 0..2
 }
 
 /**
@@ -11,7 +12,7 @@ export interface TipsPanelProps {
  * Supportive, non-judgmental messaging
  */
 export default function TipsPanel({ tips }: TipsPanelProps) {
-  const [displayTips, setDisplayTips] = useState<string[]>([]);
+  const [displayTips, setDisplayTips] = useState<TipRule[]>([]);
 
   useEffect(() => {
     // Smooth transition when tips change
@@ -40,10 +41,10 @@ export default function TipsPanel({ tips }: TipsPanelProps) {
       <div className="space-y-3">
         {displayTips.map((tip, index) => (
           <div
-            key={`${tip}-${index}`}
+            key={`${tip.id}-${index}`}
             className="animate-slide-in bg-zinc-800/50 border border-zinc-700/30 rounded-xl p-4 text-zinc-200 text-sm leading-relaxed"
           >
-            {tip}
+            {tip.message}
           </div>
         ))}
       </div>
