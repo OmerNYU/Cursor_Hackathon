@@ -3,8 +3,8 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { distance, angleDeg, midpoint, clamp, safeNorm, RollingStats } from './geometry.js';
-import type { Landmark } from './types.js';
+import { distance, angleDeg, midpoint, clamp, safeNorm, RollingStats } from './geometry';
+import type { Landmark } from './types';
 
 describe('geometry utilities', () => {
   describe('distance', () => {

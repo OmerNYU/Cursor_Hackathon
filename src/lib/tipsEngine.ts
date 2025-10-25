@@ -3,7 +3,7 @@
  * Architecture §9
  */
 
-import type { Features, Subscores, TipRule } from './types.js';
+import type { Features, Subscores, TipRule } from './types';
 
 interface RuleState {
   activeSince: number | null; // When rule condition became true

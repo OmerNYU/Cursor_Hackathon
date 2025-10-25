@@ -3,9 +3,9 @@
  * EMA and rolling statistics integration
  */
 
-import { RollingStats } from './geometry.js';
-import { EMA_BETA, ROLLING_WINDOW_MS, ROLLING_BUFFER_CAPACITY } from './config.js';
-import type { Features, Subscores } from './types.js';
+import { RollingStats } from './geometry';
+import { EMA_BETA, ROLLING_WINDOW_MS, ROLLING_BUFFER_CAPACITY } from './config';
+import type { Features, Subscores } from './types';
 
 /**
  * Exponential Moving Average

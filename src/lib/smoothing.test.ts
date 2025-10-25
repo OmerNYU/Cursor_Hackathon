@@ -3,8 +3,8 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { ema, EMAState, FeatureSmoother } from './smoothing.js';
-import type { Features } from './types.js';
+import { ema, EMAState, FeatureSmoother } from './smoothing';
+import type { Features } from './types';
 
 describe('smoothing utilities', () => {
   describe('ema', () => {

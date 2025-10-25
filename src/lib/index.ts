@@ -3,12 +3,12 @@
  * Single-call evaluation facade
  */
 
-import { FeatureProcessor } from './featureProcessor.js';
-import { FeatureSmoother } from './smoothing.js';
-import { TipsEngine } from './tipsEngine.js';
-import { DEFAULT_TIP_RULES } from './config.js';
-import { computeSubscores, computeOverall } from './scoreEngine.js';
-import type { FramePack, Features, Subscores, TipRule } from './types.js';
+import { FeatureProcessor } from './featureProcessor';
+import { FeatureSmoother } from './smoothing';
+import { TipsEngine } from './tipsEngine';
+import { DEFAULT_TIP_RULES } from './config';
+import { computeSubscores, computeOverall } from './scoreEngine';
+import type { FramePack, Features, Subscores, TipRule } from './types';
 
 // Initialize singleton instances
 const processor = new FeatureProcessor();
@@ -63,10 +63,10 @@ export function reset() {
 }
 
 // Re-export types and utilities for convenience
-export type { FramePack, Features, Subscores, TipRule } from './types.js';
-export { FeatureProcessor } from './featureProcessor.js';
-export { FeatureSmoother, SubscoreSmoother } from './smoothing.js';
-export { TipsEngine } from './tipsEngine.js';
-export { computeSubscores, computeOverall, computeScores } from './scoreEngine.js';
-export { DEFAULT_TIP_RULES } from './config.js';
+export type { FramePack, Features, Subscores, TipRule } from './types';
+export { FeatureProcessor } from './featureProcessor';
+export { FeatureSmoother, SubscoreSmoother } from './smoothing';
+export { TipsEngine } from './tipsEngine';
+export { computeSubscores, computeOverall, computeScores } from './scoreEngine';
+export { DEFAULT_TIP_RULES } from './config';
 

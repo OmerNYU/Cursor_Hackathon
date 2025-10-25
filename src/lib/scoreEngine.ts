@@ -3,8 +3,8 @@
  * Architecture §7 & §8
  */
 
-import type { Features, Subscores, Scores } from './types.js';
-import { clamp } from './geometry.js';
+import type { Features, Subscores, Scores } from './types';
+import { clamp } from './geometry';
 import {
   WEIGHTS,
   POSTURE_GOOD_MAX_DEG,
@@ -14,7 +14,7 @@ import {
   WRIST_VEL_STD_GOOD_MAX,
   WRIST_VEL_STD_HIGH,
   TORSO_SPEED_HIGH,
-} from './config.js';
+} from './config';
 
 /**
  * Sanitize numeric value: return 0 if NaN or Infinity

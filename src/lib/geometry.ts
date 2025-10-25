@@ -3,7 +3,7 @@
  * Pure math helpers with unit tests
  */
 
-import type { Vec2, Vec3, Landmark } from './types.js';
+import type { Vec2, Vec3, Landmark } from './types';
 
 /**
  * Euclidean distance between two points

@@ -3,8 +3,8 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { TipsEngine } from './tipsEngine.js';
-import type { TipRule, Features, Subscores } from './types.js';
+import { TipsEngine } from './tipsEngine';
+import type { TipRule, Features, Subscores } from './types';
 
 describe('TipsEngine', () => {
   const mockFeatures: Features = {
