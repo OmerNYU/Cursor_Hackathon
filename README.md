@@ -58,7 +58,22 @@ The app will open at `http://localhost:5173` (or the next available port).
 ### Build for Production
 
 ```bash
-# Build optimized production bundle
+# Build optimized production bundle# Clone the repository
+git clone https://github.com/OmerNYU/Cursor_Hackathon.git
+cd Cursor_Hackathon
+
+# Checkout the live-camera-mock-scoring branch
+git checkout live-camera-mock-scoring
+
+# Navigate to the PitchMirror app
+cd pitchmirror
+
+# Install dependencies
+npm install
+
+# Start the development server
+npm run dev
+
 npm run build
 
 # Preview production build
