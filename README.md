@@ -474,7 +474,6 @@ MIT License - see [LICENSE](../LICENSE) file for details.
 
 ## 📞 Support & Contact
 
-- **Issues**: [GitHub Issues](https://github.com/OmerNYU/Cursor_Hackathon/issues)
 - **Documentation**: [INTEGRATION.md](INTEGRATION.md) for integration guide
 - **Architecture**: See [Architecture.md](../Architecture.md) for detailed specs
 
@@ -520,40 +519,9 @@ MIT License - see [LICENSE](../LICENSE) file for details.
 - **Documentation**: ✅ COMPREHENSIVE
 - **Code Quality**: ✅ PRODUCTION-READY
 
----
 
-**Built with ❤️ for the Cursor Hackathon**  
-*October 2025 - Frontend Team*
 
----
 
-## 🚀 Deploy to Web
-
-### Option 1: Vercel (Recommended)
-1. Push this branch to GitHub
-2. Go to [vercel.com](https://vercel.com)
-3. Click "Import Project"
-4. Select your repo and branch: `live-camera-mock-scoring`
-5. Configure:
-   - **Root Directory**: `pitchmirror`
-   - **Framework**: Vite
-   - **Build Command**: `npm run build`
-   - **Output Directory**: `dist`
-6. Deploy! (Live in ~2 minutes)
-
-### Option 2: Netlify
-1. Go to [netlify.com](https://netlify.com)
-2. Click "Add new site" → "Import existing project"
-3. Select GitHub repo
-4. Configure:
-   - **Branch**: `live-camera-mock-scoring`
-   - **Base directory**: `pitchmirror`
-   - **Build command**: `npm run build`
-   - **Publish directory**: `pitchmirror/dist`
-5. Deploy!
-
-### Option 3: GitHub Pages
-Coming soon - requires workflow setup.
 
 ---
 
