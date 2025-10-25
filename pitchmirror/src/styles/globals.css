@@ -1,0 +1,39 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 5%;
+    --foreground: 0 0% 98%;
+  }
+  
+  body {
+    @apply bg-zinc-950 text-zinc-100;
+  }
+
+  * {
+    @apply border-zinc-800;
+  }
+}
+
+@layer components {
+  .canvas-mirror {
+    transform: scaleX(-1);
+  }
+
+  .score-glow {
+    text-shadow: 0 0 20px currentColor, 0 0 40px currentColor;
+  }
+
+  .subscore-bar {
+    transition: width 0.5s ease-out, background-color 0.3s ease;
+  }
+}
+
+@layer utilities {
+  .text-shadow-glow {
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+  }
+}
+
