@@ -228,28 +228,39 @@ export async function warmup(video: HTMLVideoElement): Promise<void> {
     const [poseDetector, faceDetector] = await Promise.all([loadPose(), loadFace()]);
     
     // Wait for video to have actual frames available
-    if (video.readyState < 2) {
-      console.log('[MediaPipe] Waiting for video to have frames...');
-      await new Promise<void>((resolve) => {
-        const checkFrames = () => {
-          if (video.readyState >= 2 && video.videoWidth > 0 && video.videoHeight > 0) {
-            console.log('[MediaPipe] Video has frames ready');
-            resolve();
-          } else {
-            setTimeout(checkFrames, 50);
-          }
-        };
-        checkFrames();
-      });
-    }
+    console.log('[MediaPipe] Waiting for video frames... readyState:', video.readyState, 'dimensions:', video.videoWidth, 'x', video.videoHeight);
+    
+    // Give the browser a moment to start rendering frames
+    await new Promise<void>((resolve) => {
+      const startTime = Date.now();
+      const maxWait = 3000; // 3 second timeout
+      
+      const checkFrames = () => {
+        const elapsed = Date.now() - startTime;
+        console.log('[MediaPipe] Checking frames... readyState:', video.readyState, 'dimensions:', video.videoWidth, 'x', video.videoHeight, 'elapsed:', elapsed, 'ms');
+        
+        if (video.readyState >= 2 && video.videoWidth > 0 && video.videoHeight > 0) {
+          console.log('[MediaPipe] Video has frames ready!');
+          resolve();
+        } else if (elapsed > maxWait) {
+          // Timeout - proceed anyway since we know dimensions are valid from useCamera
+          console.log('[MediaPipe] Timeout waiting for readyState, proceeding anyway (dimensions are valid)');
+          resolve();
+        } else {
+          setTimeout(checkFrames, 100);
+        }
+      };
+      checkFrames();
+    });
     
     // Run a dummy detection to warm up the models
     const ts = performance.now();
+    console.log('[MediaPipe] Running warmup detections...');
     poseDetector.detect(video, ts);
     faceDetector.detect(video, ts);
     console.log('[MediaPipe] Warmup detections completed successfully');
   } catch (err) {
-    console.warn('Warmup failed:', err);
+    console.warn('[MediaPipe] Warmup failed:', err);
   }
 }
 

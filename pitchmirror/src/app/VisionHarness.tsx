@@ -14,6 +14,19 @@ export function VisionHarness() {
   const [uiData, setUiData] = useState(toUI(null, null));
   const [scores, setScores] = useState<ReturnType<typeof evaluate> | null>(null);
 
+  // Ensure video plays when camera is ready
+  useEffect(() => {
+    const video = vision.videoRef.current;
+    if (video && vision.isReady && video.srcObject) {
+      console.log('[VisionHarness] Attempting to play video...');
+      video.play().then(() => {
+        console.log('[VisionHarness] Video playing successfully!');
+      }).catch((err) => {
+        console.error('[VisionHarness] Video play failed:', err);
+      });
+    }
+  }, [vision.isReady, vision.videoRef]);
+
   const handleStart = async () => {
     try {
       console.log('Starting camera...');

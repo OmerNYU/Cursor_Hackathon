@@ -76,82 +76,37 @@ export function useCamera(): CameraAPI {
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
       streamRef.current = stream;
 
-      // Assign stream to video element
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        
-        // Wait for metadata to load
-        await new Promise<void>((resolve, reject) => {
-          if (!videoRef.current) {
-            reject(new Error('Video element not available'));
-            return;
-          }
-
-          const video = videoRef.current;
+        // Assign stream to video element using the WORKING pattern from SimpleVideoTest
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          console.log('[Camera] Stream assigned to video element');
           
-          const onLoadedMetadata = () => {
-            video.removeEventListener('loadedmetadata', onLoadedMetadata);
-            video.removeEventListener('error', onError);
-            resolve();
-          };
-
-          const onError = () => {
-            video.removeEventListener('loadedmetadata', onLoadedMetadata);
-            video.removeEventListener('error', onError);
-            reject(new Error('Failed to load video metadata'));
-          };
-
-          video.addEventListener('loadedmetadata', onLoadedMetadata);
-          video.addEventListener('error', onError);
-        });
-
-        // Play video
-        try {
-          await videoRef.current.play();
-        } catch {
-          throw new Error('Autoplay blocked. Please interact with the page first.');
-        }
-
-        // Wait for video to have valid dimensions with timeout
-        await new Promise<void>((resolve, reject) => {
-          const startTime = Date.now();
-          const timeout = 5000; // 5 second timeout
-          
-          const checkDimensions = () => {
+          // THIS is the pattern that works!
+          await new Promise<void>((resolve, reject) => {
             if (!videoRef.current) {
-              reject(new Error('Video element lost during dimension check'));
+              reject(new Error('Video element not available'));
               return;
             }
-            
-            const width = videoRef.current.videoWidth;
-            const height = videoRef.current.videoHeight;
-            
-            console.log(`[Camera] Checking dimensions: ${width}x${height}`);
-            
-            if (width > 0 && height > 0) {
-              console.log(`[Camera] ✓ Video dimensions ready: ${width}x${height}`);
-              resolve();
-            } else if (Date.now() - startTime > timeout) {
-              // Timeout - try to force dimensions by reading from stream
-              const track = streamRef.current?.getVideoTracks()[0];
-              const settings = track?.getSettings();
-              console.log('[Camera] Dimension timeout, track settings:', settings);
-              
-              if (settings?.width && settings?.height) {
-                console.log(`[Camera] Using track dimensions: ${settings.width}x${settings.height}`);
-                resolve();
-              } else {
-                reject(new Error(`Video dimensions never became valid after ${timeout}ms`));
-              }
-            } else {
-              setTimeout(checkDimensions, 100);
-            }
-          };
-          checkDimensions();
-        });
 
-        setIsReady(true);
-        console.log('[Camera] ✓✓✓ Camera is ready ✓✓✓');
+            const video = videoRef.current;
+            
+            video.onloadedmetadata = () => {
+              console.log('[Camera] Video metadata loaded');
+              video.play().then(() => {
+                const width = video.videoWidth;
+                const height = video.videoHeight;
+                console.log(`[Camera] ✓✓✓ Video playing! ${width}x${height}`);
+                setIsReady(true);
+                resolve();
+              }).catch(err => {
+                reject(new Error(`Play failed: ${err.message}`));
+              });
+            };
+
+            video.onerror = () => {
+              reject(new Error('Video element error'));
+            };
+          });
         
         // Enumerate devices after successful permission
         await enumerateDevices();

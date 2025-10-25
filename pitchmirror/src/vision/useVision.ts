@@ -104,7 +104,18 @@ export function useVision(): VisionAPI {
       // Warmup models
       console.log('[Vision] Warming up models...');
       if (camera.videoRef.current) {
-        await warmup(camera.videoRef.current);
+        const video = camera.videoRef.current;
+        console.log('[Vision] Video element before warmup:', {
+          readyState: video.readyState,
+          videoWidth: video.videoWidth,
+          videoHeight: video.videoHeight,
+          srcObject: video.srcObject ? 'present' : 'null',
+          paused: video.paused,
+          currentTime: video.currentTime
+        });
+        await warmup(video);
+      } else {
+        console.error('[Vision] No video element available for warmup!');
       }
       console.log('[Vision] Warmup complete');
 
