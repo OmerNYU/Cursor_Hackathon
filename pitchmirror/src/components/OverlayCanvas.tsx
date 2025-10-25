@@ -44,7 +44,7 @@ export default function OverlayCanvas({ frame, show }: OverlayCanvasProps) {
 
       // Draw pose skeleton if available
       if (frame.pose) {
-        const { shoulders, hips, wrists, torsoMid } = frame.pose;
+        const { shoulders, hips, wrists } = frame.pose;
         const color = frame.quality.poseOk ? '#39ff14' : '#ff4444';
 
         ctx.strokeStyle = color;
@@ -106,15 +106,13 @@ export default function OverlayCanvas({ frame, show }: OverlayCanvasProps) {
 
       // Draw face/gaze indicators if available
       if (frame.face) {
-        const { iris, eyes, faceCenter, noseTip } = frame.face;
+        const { iris, faceCenter } = frame.face;
         const color = frame.quality.faceOk ? '#00ffff' : '#ff4444';
 
         ctx.strokeStyle = color;
         ctx.fillStyle = color;
 
         // Draw eye landmarks
-        const lEyeOuter = toPixel(eyes.L_outer.x, eyes.L_outer.y);
-        const rEyeOuter = toPixel(eyes.R_outer.x, eyes.R_outer.y);
         const lIris = toPixel(iris.L.x, iris.L.y);
         const rIris = toPixel(iris.R.x, iris.R.y);
 

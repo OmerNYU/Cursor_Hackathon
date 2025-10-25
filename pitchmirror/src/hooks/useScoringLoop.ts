@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { UseScoringLoopResult, ScoringState, FramePack } from '../lib/types';
+import { UseScoringLoopResult, ScoringState } from '../lib/types';
 import { useMediaPipe } from '../lib/mockVision';
 import { evaluate } from '../lib/mockLogic';
 
@@ -15,7 +15,7 @@ import { evaluate } from '../lib/mockLogic';
  */
 export function useScoringLoop(): UseScoringLoopResult {
   // Get frame data from Vision layer (or mock)
-  const { framePack, videoRef, isReady, error } = useMediaPipe();
+  const { framePack, isReady, error } = useMediaPipe();
   
   // Main state
   const [state, setState] = useState<ScoringState>({

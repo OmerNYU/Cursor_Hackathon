@@ -5,7 +5,7 @@ import { FramePack, EvaluateResult } from './types';
  * Generates reasonable scores and tips based on frame quality
  * This allows UI testing without actual Logic layer
  */
-export function evaluate(framePack: FramePack, nowMs: number): EvaluateResult {
+export function evaluate(framePack: FramePack, _nowMs: number): EvaluateResult {
   // Generate mock features based on frame quality
   const hasPose = !!framePack.pose;
   const hasFace = !!framePack.face;

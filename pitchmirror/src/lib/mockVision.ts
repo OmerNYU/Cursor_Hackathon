@@ -8,7 +8,7 @@ import sampleFrames from '../fixtures/frames.sample.json';
  * This allows UI testing without actual Vision layer
  */
 export function useMediaPipe(): UseMediaPipeResult {
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null!);
   const [framePack, setFramePack] = useState<FramePack | null>(null);
   const [isReady, setIsReady] = useState(false);
   const frameIndexRef = useRef(0);
