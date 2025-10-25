@@ -4,7 +4,7 @@
  */
 
 import type { FramePack, Features, Landmark } from './types.js';
-import { distance, angleDeg, midpoint } from './geometry.js';
+import { distance, angleDeg, midpoint, safeNorm } from './geometry.js';
 import { gazeDeviationDeg, GazeBreakTracker } from './gaze.js';
 import { MISSING_LANDMARK_GRACE_MS } from './config.js';
 
@@ -19,6 +19,9 @@ export class FeatureProcessor {
   // Grace period tracking for missing landmarks
   private lastGoodFeatures: Partial<Features> = {};
   private featureMissingStart: Map<keyof Features, number> = new Map();
+  
+  // Track whether pose data is fresh (not from grace period)
+  private lastPoseWasFresh = true;
 
   /**
    * Extract all features from a frame pack
@@ -42,12 +45,16 @@ export class FeatureProcessor {
       this.markFeaturePresent('swaySigma', pack.ts);
       this.markFeaturePresent('torsoSpeed', pack.ts);
       this.markFeaturePresent('wristVelStd', pack.ts);
+      
+      this.lastPoseWasFresh = true;
     } else {
       // Apply grace period for pose features
       features.postureAngleDeg = this.getWithGrace('postureAngleDeg', pack.ts, 5);
       features.swaySigma = this.getWithGrace('swaySigma', pack.ts, 0.01);
       features.torsoSpeed = this.getWithGrace('torsoSpeed', pack.ts, 0.05);
       features.wristVelStd = this.getWithGrace('wristVelStd', pack.ts, 0.02);
+      
+      this.lastPoseWasFresh = false;
     }
 
     // Extract eye contact features (requires face)
@@ -98,7 +105,7 @@ export class FeatureProcessor {
 
     // Sway: instantaneous horizontal position (to be fed to rolling stats)
     // We'll use shoulder midpoint X position, normalized by torso length
-    const swayRaw = shoulderMid.x / pack.scales.torsoLengthPx;
+    const swayRaw = safeNorm(shoulderMid.x, pack.scales.torsoLengthPx);
 
     return {
       postureAngleDeg,
@@ -128,7 +135,8 @@ export class FeatureProcessor {
     if (dt === 0) return 0;
 
     // Speed normalized by torso length
-    const speed = dist / pack.scales.torsoLengthPx / dt;
+    const speedPxPerMs = dist / dt;
+    const speed = safeNorm(speedPxPerMs, pack.scales.torsoLengthPx);
 
     return speed;
   }
@@ -154,8 +162,9 @@ export class FeatureProcessor {
     if (dt === 0) return 0;
 
     // Average velocity normalized by face width
-    const avgVel = (leftVel + rightVel) / 2;
-    const normalizedVel = avgVel / pack.scales.faceWidthPx / dt;
+    const avgVelPx = (leftVel + rightVel) / 2;
+    const avgVelPxPerMs = avgVelPx / dt;
+    const normalizedVel = safeNorm(avgVelPxPerMs, pack.scales.faceWidthPx);
 
     return normalizedVel;
   }
@@ -190,6 +199,13 @@ export class FeatureProcessor {
   }
 
   /**
+   * Check if the last extracted pose features were fresh (not from grace period)
+   */
+  isPoseDataFresh(): boolean {
+    return this.lastPoseWasFresh;
+  }
+
+  /**
    * Reset all state
    */
   reset(): void {
@@ -197,6 +213,7 @@ export class FeatureProcessor {
     this.gazeTracker.reset();
     this.lastGoodFeatures = {};
     this.featureMissingStart.clear();
+    this.lastPoseWasFresh = true;
   }
 }
 

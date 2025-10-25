@@ -40,9 +40,33 @@ npm run test:harness
 
 ## Usage Example
 
+### Option 1: Single-Call API (Recommended)
+
 ```typescript
-import { FeatureProcessor, FeatureSmoother, computeScores, TipsEngine, DEFAULT_TIP_RULES } from './index.js';
-import type { FramePack } from './index.js';
+import { evaluate, reset } from './lib/index.js';
+import type { FramePack } from './lib/types.js';
+
+// Process each frame from MediaPipe
+function onFrame(frame: FramePack) {
+  const result = evaluate(frame, performance.now());
+  
+  // result = { features, subscores, overall, tips }
+  updateUI(result.overall, result.tips);
+}
+
+// When starting a new session
+function startNewSession() {
+  reset();
+}
+```
+
+### Option 2: Manual Pipeline (Advanced)
+
+For fine-grained control:
+
+```typescript
+import { FeatureProcessor, FeatureSmoother, computeSubscores, computeOverall, TipsEngine, DEFAULT_TIP_RULES } from './lib/index.js';
+import type { FramePack } from './lib/types.js';
 
 // Initialize (maintain as state in your app)
 const processor = new FeatureProcessor();
@@ -54,8 +78,10 @@ function onFrame(frame: FramePack) {
   // 1. Extract features
   const rawFeatures = processor.extractFeatures(frame);
   
-  // 2. Add to rolling windows
-  smoother.addSamples(rawFeatures.swaySigma, rawFeatures.wristVelStd, frame.ts);
+  // 2. Add to rolling windows (only if pose data is fresh)
+  if (processor.isPoseDataFresh()) {
+    smoother.addSamples(rawFeatures.swaySigma, rawFeatures.wristVelStd, frame.ts);
+  }
   
   // 3. Get rolling stats
   const stds = smoother.getRollingStds(frame.ts);
@@ -66,13 +92,14 @@ function onFrame(frame: FramePack) {
   const features = smoother.smoothFeatures(rawFeatures);
   
   // 5. Compute scores
-  const scores = computeScores(features);
+  const subscores = computeSubscores(features);
+  const overall = computeOverall(subscores);
   
   // 6. Get tips
-  const tips = tipsEngine.evaluateTips(features, scores, frame.ts);
+  const tips = tipsEngine.evaluateTips(features, subscores, frame.ts);
   
-  // Update UI with scores.overall (0-100) and tips
-  updateUI(scores, tips);
+  // Update UI with overall (0-100) and tips
+  updateUI(overall, tips);
 }
 ```
 
@@ -81,23 +108,26 @@ function onFrame(frame: FramePack) {
 ```
 src/
 ├── lib/
+│   ├── index.ts              # Public API exports & evaluate() facade
 │   ├── types.ts              # Core type definitions
-│   ├── config.ts             # Thresholds and tunables
-│   ├── geometry.ts           # Math utilities
+│   ├── config.ts             # Thresholds and tunables (test mode support)
+│   ├── geometry.ts           # Math utilities (safeNorm, RollingStats)
 │   ├── geometry.test.ts      # Unit tests
 │   ├── smoothing.ts          # EMA and rolling stats
 │   ├── smoothing.test.ts     # Unit tests
 │   ├── gaze.ts               # Gaze estimation
-│   ├── featureProcessor.ts   # Feature extraction
-│   ├── scoreEngine.ts        # Scoring logic
-│   └── tipsEngine.ts         # Tips generation
+│   ├── featureProcessor.ts   # Feature extraction with grace periods
+│   ├── scoreEngine.ts        # Scoring logic (NaN-safe)
+│   ├── tipsEngine.ts         # Tips generation
+│   └── tipsEngine.test.ts    # Unit tests
 ├── fixtures/
 │   ├── frames.still.json     # Still subject test data
 │   ├── frames.lookaway.json  # Look away test data
-│   └── frames.walk.json      # Walk around test data
-├── test-harness.ts           # End-to-end validation
+│   ├── frames.walk.json      # Walk around test data
+│   └── frames.irregular.json # Irregular FPS test data
+├── test-harness.ts           # End-to-end validation (NaN checks)
 ├── example.ts                # Usage example
-└── index.ts                  # Public API exports
+└── index.ts                  # Main entry point
 ```
 
 ## Integration with Main App
@@ -116,6 +146,21 @@ All configurable values are in `src/lib/config.ts`:
 - Adjust `WEIGHTS` to change subscore importance
 - Adjust `EMA_BETA` for more/less smoothing (0.2-0.4 recommended)
 - Adjust thresholds (`POSTURE_GOOD_MAX_DEG`, etc.) based on user testing
+
+## Test Mode
+
+When running tests with small fixtures, set `PM_TEST=1` to use shorter rolling window:
+- **Production:** `ROLLING_WINDOW_MS = 1500ms` (~45 frames)
+- **Test:** `ROLLING_WINDOW_MS = 330ms` (~10 frames)
+
+The `npm run test:harness` script automatically sets `PM_TEST=1`.
+
+## Safety Features
+
+- **`safeNorm(value, scale)`** - Prevents division by zero in normalization
+- **`sane(x)`** - Replaces NaN/Infinity with 0 in scoring
+- **Grace period logic** - Holds last valid features for 500ms without polluting rolling stats
+- **Timestamp consistency** - All components use same monotonic time source (`performance.now()`)
 
 ## Next Steps
 

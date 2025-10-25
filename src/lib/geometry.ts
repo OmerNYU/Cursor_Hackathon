@@ -54,6 +54,18 @@ export function clamp(value: number, min: number, max: number): number {
 }
 
 /**
+ * Safe normalization helper
+ * Prevents NaN or division-by-zero errors when scale is very small
+ * @param value - The value to normalize
+ * @param scale - The scale to divide by (optional, defaults to 1)
+ * @param eps - Epsilon to prevent division by zero (default 1e-6)
+ */
+export function safeNorm(value: number, scale?: number, eps = 1e-6): number {
+  const s = Math.max(Math.abs(scale ?? 1), eps);
+  return value / s;
+}
+
+/**
  * Rolling statistics with ring buffer for efficient σ computation
  * Capacity ~64 for 1500ms window at 30fps
  */

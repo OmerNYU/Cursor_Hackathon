@@ -5,12 +5,16 @@
 
 import type { Features, Subscores, TipRule } from './types.js';
 
+// Test mode flag (set via PM_TEST=1 environment variable)
+export const TEST_MODE = process.env.PM_TEST === '1';
+
 // Weights for overall confidence score
 export const WEIGHTS = { P: 0.4, E: 0.3, S: 0.2, C: 0.1 } as const;
 
 // Smoothing parameters
 export const EMA_BETA = 0.3;
-export const ROLLING_WINDOW_MS = 1500;
+// Rolling window: 1500ms (~45 frames at 30fps) in production, 330ms (~10 frames) in test mode
+export const ROLLING_WINDOW_MS = TEST_MODE ? 330 : 1500;
 
 // Posture thresholds
 export const POSTURE_GOOD_MAX_DEG = 10; // angle to vertical (≤10° is good)
@@ -70,7 +74,7 @@ export const DEFAULT_TIP_RULES: TipRule[] = [
     windowSec: 2,
     cooldownSec: 6,
     when: (f: Features, _s: Subscores) => f.torsoSpeed > TORSO_SPEED_HIGH,
-    message: '🚶 You're pacing — plant your feet for emphasis.',
+    message: '🚶 You\'re pacing — plant your feet for emphasis.',
   },
   {
     id: 'gaze-breaks-frequent',

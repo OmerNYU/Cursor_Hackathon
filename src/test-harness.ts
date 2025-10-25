@@ -26,6 +26,28 @@ interface TestResult {
 }
 
 /**
+ * Check if value contains NaN or Infinity
+ */
+function hasInvalidNumbers(obj: any): string[] {
+  const invalid: string[] = [];
+  
+  function check(value: any, path: string) {
+    if (typeof value === 'number') {
+      if (!Number.isFinite(value)) {
+        invalid.push(`${path} = ${value}`);
+      }
+    } else if (typeof value === 'object' && value !== null) {
+      for (const key in value) {
+        check(value[key], path ? `${path}.${key}` : key);
+      }
+    }
+  }
+  
+  check(obj, '');
+  return invalid;
+}
+
+/**
  * Load fixture file
  */
 function loadFixture(filename: string): FramePack[] {
@@ -59,8 +81,10 @@ function processFrames(frames: FramePack[]): {
     const swayValue = rawFeatures.swaySigma; // Actually raw sway position
     const wristVel = rawFeatures.wristVelStd; // Actually raw velocity
 
-    // Add to rolling windows
-    smoother.addSamples(swayValue, wristVel, frame.ts);
+    // Add to rolling windows (only if pose data is fresh, not from grace period)
+    if (processor.isPoseDataFresh()) {
+      smoother.addSamples(swayValue, wristVel, frame.ts);
+    }
 
     // Get rolling std deviations
     const rollingStds = smoother.getRollingStds(frame.ts);
@@ -87,6 +111,27 @@ function processFrames(frames: FramePack[]): {
 }
 
 /**
+ * Validate that outputs contain no NaN or Infinity
+ */
+function validateOutputs(features: Features[], scores: Scores[]): string[] {
+  const errors: string[] = [];
+  
+  for (let i = 0; i < features.length; i++) {
+    const featInvalid = hasInvalidNumbers(features[i]);
+    if (featInvalid.length > 0) {
+      errors.push(`Frame ${i} features: ${featInvalid.join(', ')}`);
+    }
+    
+    const scoreInvalid = hasInvalidNumbers(scores[i]);
+    if (scoreInvalid.length > 0) {
+      errors.push(`Frame ${i} scores: ${scoreInvalid.join(', ')}`);
+    }
+  }
+  
+  return errors;
+}
+
+/**
  * Test scenario 1: Still subject
  * Expectation: High P/S/C scores, overall > 80, no tips
  */
@@ -96,6 +141,15 @@ function testStillSubject(): TestResult {
 
   const details: string[] = [];
   let passed = true;
+
+  // Validate no NaN/Infinity
+  const invalidOutputs = validateOutputs(features, scores);
+  if (invalidOutputs.length > 0) {
+    details.push(`❌ Invalid outputs: ${invalidOutputs.join('; ')}`);
+    passed = false;
+  } else {
+    details.push(`✓ All outputs are finite`);
+  }
 
   // Check final scores (after smoothing has settled)
   const finalScores = scores[scores.length - 1];
@@ -155,6 +209,15 @@ function testLookAway(): TestResult {
   const details: string[] = [];
   let passed = true;
 
+  // Validate no NaN/Infinity
+  const invalidOutputs = validateOutputs(features, scores);
+  if (invalidOutputs.length > 0) {
+    details.push(`❌ Invalid outputs: ${invalidOutputs.join('; ')}`);
+    passed = false;
+  } else {
+    details.push(`✓ All outputs are finite`);
+  }
+
   // Check gaze deviation increases
   const firstGaze = features[0].gazeDevDeg;
   const lastGaze = features[features.length - 1].gazeDevDeg;
@@ -210,6 +273,15 @@ function testWalkAround(): TestResult {
   const details: string[] = [];
   let passed = true;
 
+  // Validate no NaN/Infinity
+  const invalidOutputs = validateOutputs(features, scores);
+  if (invalidOutputs.length > 0) {
+    details.push(`❌ Invalid outputs: ${invalidOutputs.join('; ')}`);
+    passed = false;
+  } else {
+    details.push(`✓ All outputs are finite`);
+  }
+
   // Check torso speed
   const speeds = features.map(f => f.torsoSpeed);
   const maxSpeed = Math.max(...speeds);
@@ -255,13 +327,70 @@ function testWalkAround(): TestResult {
 }
 
 /**
+ * Test scenario 4: Irregular FPS
+ * Expectation: Robust against variable frame rates, no NaN, stable scores
+ */
+function testIrregularFPS(): TestResult {
+  const frames = loadFixture('frames.irregular.json');
+  const { features, scores, tips } = processFrames(frames);
+
+  const details: string[] = [];
+  let passed = true;
+
+  // Validate no NaN/Infinity
+  const invalidOutputs = validateOutputs(features, scores);
+  if (invalidOutputs.length > 0) {
+    details.push(`❌ Invalid outputs: ${invalidOutputs.join('; ')}`);
+    passed = false;
+  } else {
+    details.push(`✓ All outputs are finite`);
+  }
+
+  // Check timestamp gaps vary
+  const gaps: number[] = [];
+  for (let i = 1; i < frames.length; i++) {
+    gaps.push(frames[i].ts - frames[i - 1].ts);
+  }
+  const minGap = Math.min(...gaps);
+  const maxGap = Math.max(...gaps);
+  details.push(`Timestamp gaps: ${minGap}ms - ${maxGap}ms`);
+
+  if (maxGap < 40) {
+    details.push(`❌ Expected max gap >40ms for irregular FPS`);
+    passed = false;
+  } else {
+    details.push(`✓ FPS variation present`);
+  }
+
+  // Check final scores are reasonable for still subject
+  const finalScores = scores[scores.length - 1];
+  details.push(`Final overall: ${finalScores.overall.toFixed(1)}`);
+  details.push(`Final subscores: P=${finalScores.P.toFixed(2)}, E=${finalScores.E.toFixed(2)}, S=${finalScores.S.toFixed(2)}, C=${finalScores.C.toFixed(2)}`);
+
+  if (finalScores.P < 0.7) {
+    details.push(`❌ Expected P > 0.7 for still subject`);
+    passed = false;
+  } else {
+    details.push(`✓ Posture score stable`);
+  }
+
+  return {
+    scenario: 'Irregular FPS',
+    passed,
+    details,
+    finalScores,
+    triggeredTips: [...new Set(tips.flatMap(t => t).map(t => t.id))],
+  };
+}
+
+/**
  * Run all tests and print results
  */
 function runAllTests(): void {
   console.log('🧪 PitchMirror Feature Processing Engine - Test Harness\n');
   console.log('═'.repeat(60));
 
-  const tests = [testStillSubject, testLookAway, testWalkAround];
+  const tests = [testStillSubject, testLookAway, testWalkAround, testIrregularFPS];
   const results: TestResult[] = [];
 
   for (const test of tests) {
@@ -303,5 +432,5 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   runAllTests();
 }
 
-export { runAllTests, testStillSubject, testLookAway, testWalkAround };
+export { runAllTests, testStillSubject, testLookAway, testWalkAround, testIrregularFPS };
 

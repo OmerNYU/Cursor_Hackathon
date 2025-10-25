@@ -20,6 +20,25 @@ describe('smoothing utilities', () => {
     it('handles beta=0 (full smoothing)', () => {
       expect(ema(10, 20, 0)).toBe(10);
     });
+
+    it('produces values between prev and curr for beta in (0,1)', () => {
+      const prev = 10;
+      const curr = 20;
+      
+      for (const beta of [0.1, 0.3, 0.5, 0.7, 0.9]) {
+        const result = ema(prev, curr, beta);
+        expect(result).toBeGreaterThanOrEqual(Math.min(prev, curr));
+        expect(result).toBeLessThanOrEqual(Math.max(prev, curr));
+      }
+    });
+
+    it('approaches current value as beta approaches 1', () => {
+      const result1 = ema(10, 20, 0.9);
+      const result2 = ema(10, 20, 0.99);
+      
+      expect(result2).toBeGreaterThan(result1);
+      expect(result2).toBeCloseTo(20, 0);
+    });
   });
 
   describe('EMAState', () => {

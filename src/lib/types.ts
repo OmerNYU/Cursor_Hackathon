@@ -47,6 +47,7 @@ export interface Features {
   gazeBreaksPerMin: number; // EMA estimate of gaze breaks per minute
   wristVelStd: number; // normalized by faceWidth
   torsoSpeed: number; // normalized by torsoLength
+  [key: string]: number; // Index signature for EMA compatibility
 }
 
 /**
@@ -58,6 +59,7 @@ export interface Subscores {
   E: number; // Eye contact
   S: number; // Smoothness (hands)
   C: number; // Composure/pacing
+  [key: string]: number; // Index signature for EMA compatibility
 }
 
 /**

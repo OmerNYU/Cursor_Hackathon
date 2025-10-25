@@ -42,7 +42,7 @@ export class EMAState<T extends Record<string, number>> {
     const smoothed = {} as T;
     for (const key in values) {
       const prev = this.state[key] ?? values[key];
-      smoothed[key] = ema(prev, values[key], this.beta);
+      smoothed[key] = ema(prev, values[key], this.beta) as T[Extract<keyof T, string>];
       this.state[key] = smoothed[key];
     }
 

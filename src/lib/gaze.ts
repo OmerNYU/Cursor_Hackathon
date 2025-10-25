@@ -1,6 +1,16 @@
 /**
  * Gaze estimation using iris landmarks
  * Architecture §7B
+ * 
+ * COORDINATE CONVENTION:
+ * - Screen-forward is treated as (0, -1) in screen coordinates (y increases downward)
+ * - gazeDeviationDeg measures the angle between normalized eye→iris vector and (0, -1)
+ * - Smaller angles mean better eye contact with camera
+ * 
+ * FALLBACK BEHAVIOR:
+ * - If one eye is missing: use the other eye
+ * - If both eyes missing for >GRACE_MS: return undefined (handled by feature processor)
+ * - Iris position relative to eye center indicates gaze direction
  */
 
 import type { Landmark, Vec2, FaceFrame } from './types.js';

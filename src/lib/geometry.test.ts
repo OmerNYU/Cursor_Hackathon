@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { distance, angleDeg, midpoint, clamp, RollingStats } from './geometry.js';
+import { distance, angleDeg, midpoint, clamp, safeNorm, RollingStats } from './geometry.js';
 import type { Landmark } from './types.js';
 
 describe('geometry utilities', () => {
@@ -37,6 +37,22 @@ describe('geometry utilities', () => {
     it('handles negative values (abs)', () => {
       expect(angleDeg({ x: -1, y: 1 })).toBeCloseTo(45, 5);
       expect(angleDeg({ x: 1, y: -1 })).toBeCloseTo(45, 5);
+    });
+
+    it('handles vertical upward vector (edge case)', () => {
+      expect(angleDeg({ x: 0, y: 10 })).toBe(0);
+    });
+
+    it('handles vertical downward vector (edge case)', () => {
+      expect(angleDeg({ x: 0, y: -10 })).toBe(0);
+    });
+
+    it('handles horizontal left vector (edge case)', () => {
+      expect(angleDeg({ x: -10, y: 0 })).toBeCloseTo(90, 5);
+    });
+
+    it('handles horizontal right vector (edge case)', () => {
+      expect(angleDeg({ x: 10, y: 0 })).toBeCloseTo(90, 5);
     });
   });
 
@@ -77,6 +93,36 @@ describe('geometry utilities', () => {
 
     it('returns value if within range', () => {
       expect(clamp(5, 0, 10)).toBe(5);
+    });
+  });
+
+  describe('safeNorm', () => {
+    it('normalizes with valid scale', () => {
+      expect(safeNorm(10, 2)).toBe(5);
+    });
+
+    it('prevents division by zero', () => {
+      const result = safeNorm(10, 0);
+      expect(Number.isFinite(result)).toBe(true);
+      expect(result).toBeGreaterThan(0);
+    });
+
+    it('handles very small scale values', () => {
+      const result = safeNorm(10, 1e-10);
+      expect(Number.isFinite(result)).toBe(true);
+    });
+
+    it('uses default scale of 1 when not provided', () => {
+      expect(safeNorm(10)).toBe(10);
+    });
+
+    it('handles negative scales (uses absolute value)', () => {
+      expect(safeNorm(10, -2)).toBe(5);
+    });
+
+    it('handles custom epsilon', () => {
+      const result = safeNorm(10, 0, 0.1);
+      expect(result).toBe(10 / 0.1);
     });
   });
 
@@ -129,6 +175,36 @@ describe('geometry utilities', () => {
       
       expect(stats.count(10)).toBe(0);
       expect(stats.mean(10)).toBe(0);
+    });
+
+    it('evicts samples exactly at window boundary', () => {
+      const stats = new RollingStats(10, 100);
+      stats.add(10, 0);
+      stats.add(20, 50);
+      stats.add(30, 100);
+      
+      // At time 100, sample at 0 should be exactly at cutoff (100 - 100 = 0)
+      // Should include samples at 0, 50, 100
+      expect(stats.count(100)).toBe(3);
+      
+      // At time 101, sample at 0 is now outside window
+      expect(stats.count(101)).toBe(2);
+    });
+
+    it('handles empty stats gracefully', () => {
+      const stats = new RollingStats(10, 100);
+      
+      expect(stats.mean(0)).toBe(0);
+      expect(stats.std(0)).toBe(0);
+      expect(stats.count(0)).toBe(0);
+    });
+
+    it('handles single sample std', () => {
+      const stats = new RollingStats(10, 100);
+      stats.add(10, 0);
+      
+      // Std with only 1 sample should be 0
+      expect(stats.std(0)).toBe(0);
     });
   });
 });
